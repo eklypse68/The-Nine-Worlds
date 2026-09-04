@@ -1,0 +1,9 @@
+# Build artifacts
+/build/
+
+
+# Deps, clone yours
+/src/deps/
+
+# Ide stuff
+/.vscode/
