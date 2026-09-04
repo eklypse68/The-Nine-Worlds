@@ -13,32 +13,6 @@
 > must be implemented exactly as written. Early prototypes should become
 > real parts of the final game whenever practical.
 
-------------------------------------------------------------------------
-
-# 0. Core Development Philosophy
-
--   [ ] Build the actual game instead of spending months making a
-    separate engine first.
--   [ ] Make every prototype useful to the final game.
--   [ ] Prefer simple systems first, then replace implementations when
-    scale requires it.
--   [ ] Keep game logic independent from rendering wherever practical.
--   [ ] Keep mythology-inspired material clearly distinguishable from
-    claims of historical canon.
--   [ ] Avoid an editor-heavy workflow.
--   [ ] Build world content primarily through code and data.
--   [ ] Keep systems data-driven where that reduces duplicated code.
--   [ ] Do not prematurely optimize everything.
--   [ ] Profile before making expensive optimization decisions.
--   [ ] Design large-world systems early enough that later content does
-    not require a total rewrite.
--   [ ] Make failure safe: networking, saving, streaming, or other
-    subsystem failures should not casually destroy player progress.
--   [ ] Keep debug tooling available throughout development.
--   [ ] Maintain a playable build throughout development.
-
-------------------------------------------------------------------------
-
 # 1. Project Foundation
 
 ## 1.1 Repository
@@ -64,14 +38,11 @@
 -   [x] Add license. (GPLV3)
 -   [ ] Add contribution/development notes.
 -   [ ] Add version/build information.
--   [ ] Add CI build.
--   [ ] Add automated formatting/linting.
--   [ ] Add automated tests where useful.
+-   [x] Add CI build.
 
 ## 1.2 Initial directory architecture
 
 Possible long-term structure:
-
 The Nine Worlds/
 ├── CMakeLists.txt
 ├── README.md
