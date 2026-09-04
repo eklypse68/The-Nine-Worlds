@@ -2,8 +2,10 @@
 /build/
 
 
-# Deps, clone yours
+# Deps, clone yours when compiling if needed
 /src/deps/
 
 # Ide stuff
 /.vscode/
+
+/.cache/
