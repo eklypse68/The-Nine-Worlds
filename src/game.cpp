@@ -1,96 +1,76 @@
 #include "game.hpp"
-#include "raymath.h"
-#include <cmath>
 
-Game::Game() {
-    InitWindow(1280, 720, "The Nine Worlds");
-    SetTargetFPS(60);
+#include <SDL3/SDL.h>
+#include <chrono>
+#include <thread>
 
-    camera.position = { 10, 10, 10 };
-    camera.target = { 0, 0, 0 };
-    camera.up = { 0, 1, 0 };
-    camera.fovy = 45;
-    camera.projection = CAMERA_PERSPECTIVE;
+bool Game::init()
+{
+    if (!SDL_Init(SDL_INIT_VIDEO))
+        return false;
 
-    DisableCursor();
-}
-
-Game::~Game() {
-    CloseWindow();
-}
-
-void Game::run() {
-    while (!WindowShouldClose()) {
-        update();
-        draw();
-    }
-}
-
-void Game::update() {
-    Vector2 mouseDelta = GetMouseDelta();
-
-    yaw -= mouseDelta.x * 0.01f;
-    pitch -= mouseDelta.y * 0.01f;
-
-    pitch = Clamp(pitch, -PI / 2.0f + 0.01f, PI / 2.0f - 0.01f);
-
-    Vector3 direction = {
-        cosf(pitch) * sinf(yaw),
-        sinf(pitch),
-        cosf(pitch) * cosf(yaw)
-    };
-
-    float speed = 0.1f;
-
-    if (IsKeyDown(KEY_W)) {
-        camera.position = Vector3Add(
-            camera.position,
-            Vector3Scale(direction, speed)
-        );
-    }
-
-    if (IsKeyDown(KEY_S)) {
-        camera.position = Vector3Subtract(
-            camera.position,
-            Vector3Scale(direction, speed)
-        );
-    }
-    if (IsKeyDown(KEY_A)) {
-        Vector3 right = Vector3CrossProduct(direction, camera.up);
-        camera.position = Vector3Subtract(
-            camera.position,
-            Vector3Scale(right, speed)
-        );
-    }   
-    if (IsKeyDown(KEY_D)) {
-        Vector3 right = Vector3CrossProduct(direction, camera.up);
-        camera.position = Vector3Add(
-            camera.position,
-            Vector3Scale(right, speed)
-        );
-    }
-
-    camera.target = Vector3Add(camera.position, direction);
-}
-
-void Game::draw() {
-    BeginDrawing();
-
-    ClearBackground(SKYBLUE);
-
-    BeginMode3D(camera);
-
-    DrawCube(
-        { 0, 1, 0 },  // position
-        2,             // width
-        2,             // height
-        2,             // length
-        RED            // color
+    window = SDL_CreateWindow(
+        "The Nine Worlds",
+        1280,
+        720,
+        0
     );
 
-    DrawGrid(20, 1.0f);
+    if (!window)
+    {
+        SDL_Quit();
+        return false;
+    }
 
-    EndMode3D();
+    running = true;
 
-    EndDrawing();
+    return true;
+}
+
+void Game::run()
+{
+    using Clock = std::chrono::steady_clock;
+
+    constexpr double targetFrameTime = 1.0 / 60.0;
+
+    while (running)
+    {
+        auto frameStart = Clock::now();
+
+        SDL_Event event;
+
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_EVENT_QUIT)
+                running = false;
+        }
+
+        // Game update goes here.
+
+        // Rendering goes here.
+
+        auto frameEnd = Clock::now();
+
+        std::chrono::duration<double> elapsed = frameEnd - frameStart;
+
+        double remaining = targetFrameTime - elapsed.count();
+
+        if (remaining > 0.0)
+        {
+            std::this_thread::sleep_for(
+                std::chrono::duration<double>(remaining)
+            );
+        }
+    }
+}
+
+void Game::shutdown()
+{
+    if (window)
+    {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+
+    SDL_Quit();
 }

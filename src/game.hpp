@@ -1,20 +1,12 @@
 #pragma once
 
-#include "raylib.h"
-
-class Game {
+class Game
+{
 public:
-    Game();
-    ~Game();
-
+    bool init();
     void run();
+    void shutdown();
 
 private:
-    void update();
-    void draw();
-
-    Camera3D camera;
-
-    float yaw = 0.0f;
-    float pitch = 0.0f;
+    bool running = false;
 };

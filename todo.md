@@ -36,8 +36,6 @@
 -   [x] Add `.gitignore`.
 -   [x] Add README.
 -   [x] Add license. (GPLV3)
--   [ ] Add contribution/development notes.
--   [ ] Add version/build information.
 -   [x] Add CI build.
 
 ## 1.2 Initial directory architecture
