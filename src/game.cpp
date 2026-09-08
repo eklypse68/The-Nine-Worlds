@@ -1,109 +1,113 @@
+#include <math.h>
+
+
 #include "game.hpp"
+#include "controls.hpp" 
+#include "worlds/midgardr/midgardr.hpp"  
+#include "renderer/Lighting.hpp"
 
-#include <SDL3/SDL.h>
-#include <chrono>
+namespace {
+    Controls controls;
+}
 
-#include <bgfx/bgfx.h>
+namespace {
+    Midgard midgard;
+}
 
 bool Game::init()
 {
-    // 1. Start SDL
-    if (!SDL_Init(SDL_INIT_VIDEO))
-        return false;
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(1920, 1080, "The Nine Worlds");
+    R3D_Init(1920, 1080);
 
-    // 2. Create SDL window
-    window = SDL_CreateWindow(
-        "The Nine Worlds",
-        1280,
-        720,
-        0
+    Image icon = LoadImage("assets/icon2.png");
+
+    ImageFormat(&icon, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    SetWindowIcon(icon);
+    UnloadImage(icon);
+
+    SetWindowMinSize(1280, 720);
+    SetWindowMaxSize(5120, 2880);
+
+    DisableCursor();
+    controls.init();
+    midgard.init();
+
+
+    Color lightColor = WHITE;
+
+    light = R3D_CreateOmniLight(
+        { -0.0f, 5.0f, 5.0f },
+        15.0f,
+        lightColor,
+        5.0f
     );
 
-    if (!window)
-    {
-        SDL_Quit();
-        return false;
-    }
-
-    // 3. Get the native Windows window handle
-    auto props = SDL_GetWindowProperties(window);
-
-    void* hwnd = SDL_GetPointerProperty(
-        props,
-        SDL_PROP_WINDOW_WIN32_HWND_POINTER,
-        nullptr
+    light2 = R3D_CreateOmniLight(
+        { 20.0f, 5.0f, 5.0f },
+        15.0f,
+        lightColor,
+        5.0f
     );
 
-    // 4. Give that handle to bgfx
-    bgfx::Init init{};
-
-    init.swapChain.nwh = hwnd;
-    init.swapChain.width = 1280;
-    init.swapChain.height = 720;
-
-    if (!bgfx::init(init))
-    {
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return false;
-    }
-    bgfx::setViewClear(
-    0,
-    BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-    0xff0000ff,
-    1.0f,
-    0
-    );
-
-    bgfx::setViewRect(
-        0,
-        0,
-        0,
-        1280,
-        720
-    );
-
-    running = true;
     return true;
+}   
+
+void Game::update() {
+    
+}
+
+void Game::render() {
+        BeginDrawing();
+        ClearBackground(BLUE);
+        R3D_Begin(controls.camera);
+        controls.update(); 
+
+        addOmniLight(
+            { -0.0f, 5.0f, 5.0f },
+            15.0f,
+            WHITE,
+            5.0f
+        );
+        addOmniLight(
+            { 20.0f, 5.0f, 5.0f },
+            15.0f,
+            WHITE,
+            5.0f
+        );  
+        addOmniLight(
+            { 40.0f, 5.0f, 5.0f },
+            15.0f,
+            WHITE,
+            5.0f
+        );  
+
+        DrawPlane(
+        { 0.0f, -10.0f, 0.0f },
+        { 50.0f, 50.0f },
+        GREEN   
+        );
+
+        midgard.render();
+        
+        R3D_End();
+
+        EndDrawing();
 }
 
 void Game::run()
 {
-    using Clock = std::chrono::steady_clock;
-
-    auto previousFrame = Clock::now();
-
-    while (running)
+    while (!WindowShouldClose())
     {
-        auto currentFrame = Clock::now();
-
-        std::chrono::duration<double> elapsed =
-            currentFrame - previousFrame;
-
-        double deltaTime = elapsed.count();
-
-        previousFrame = currentFrame;
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_EVENT_QUIT)
-                running = false;
-        }
-        bgfx::touch(0);
-        bgfx::frame();
+        update();
+        midgard.update();
+        render();
     }
 }
 
 void Game::shutdown()
 {
-    bgfx::shutdown();
-
-    if (window)
-    {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-
-    SDL_Quit();
-}
+    midgard.shutdown();
+    R3D_Close();
+    CloseWindow();
+}   

@@ -5,17 +5,26 @@ project(TheNineWorlds
     LANGUAGES CXX
 )
 
+list(APPEND CMAKE_MODULE_PATH
+    "${CMAKE_SOURCE_DIR}/cmake"
+)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# =========================================================
+# Dependencies
+# =========================================================
 
 set(DEPS_DIR "${CMAKE_SOURCE_DIR}/src/deps")
 
 function(clone_dependency NAME URL PATH)
     if(NOT EXISTS "${PATH}")
         message(STATUS "${NAME} not found. Cloning...")
+
         execute_process(
-            COMMAND git clone "${URL}" "${PATH}"
+            COMMAND git clone --recurse-submodules "${URL}" "${PATH}"
             RESULT_VARIABLE CLONE_RESULT
         )
 
@@ -25,22 +34,31 @@ function(clone_dependency NAME URL PATH)
     endif()
 endfunction()
 
-set(SDL_DIR "${DEPS_DIR}/SDL")
+# =========================================================
+# raylib
+# =========================================================
+
+set(RAYLIB_DIR "${DEPS_DIR}/raylib")
+
 clone_dependency(
-    "SDL3"
-    "https://github.com/libsdl-org/SDL.git"
-    "${SDL_DIR}"
+    "raylib"
+    "https://github.com/raysan5/raylib.git"
+    "${RAYLIB_DIR}"
 )
 
-set(SDL_TESTS OFF CACHE BOOL "" FORCE)
-set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(
-    "${SDL_DIR}"
-    "${CMAKE_BINARY_DIR}/SDL"
+    "${RAYLIB_DIR}"
+    "${CMAKE_BINARY_DIR}/raylib"
 )
 
+# =========================================================
+# GLM
+# =========================================================
+
 set(GLM_DIR "${DEPS_DIR}/glm")
+
 clone_dependency(
     "GLM"
     "https://github.com/g-truc/glm.git"
@@ -53,7 +71,12 @@ target_include_directories(glm INTERFACE
     "${GLM_DIR}"
 )
 
+# =========================================================
+# Jolt Physics
+# =========================================================
+
 set(JOLT_DIR "${DEPS_DIR}/JoltPhysics")
+
 clone_dependency(
     "Jolt Physics"
     "https://github.com/jrouwe/JoltPhysics.git"
@@ -70,48 +93,50 @@ add_subdirectory(
     "${CMAKE_BINARY_DIR}/Jolt"
 )
 
-set(BGFX_CMAKE_DIR "${DEPS_DIR}/bgfx.cmake")
-set(BGFX_DIR "${DEPS_DIR}/bgfx")
-set(BX_DIR "${DEPS_DIR}/bx")
-set(BIMG_DIR "${DEPS_DIR}/bimg")
+# =========================================================
+# Assimp
+# =========================================================
 
 clone_dependency(
-    "bgfx"
-    "https://github.com/bkaradzic/bgfx.git"
-    "${BGFX_DIR}"
+    assimp
+    https://github.com/assimp/assimp.git
+    "${DEPS_DIR}/assimp"
 )
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 
-clone_dependency(
-    "bx"
-    "https://github.com/bkaradzic/bx.git"
-    "${BX_DIR}"
-)
-
-clone_dependency(
-    "bimg"
-    "https://github.com/bkaradzic/bimg.git"
-    "${BIMG_DIR}"
-)
-
-clone_dependency(
-    "bgfx.cmake"
-    "https://github.com/bkaradzic/bgfx.cmake.git"
-    "${BGFX_CMAKE_DIR}"
-)
-
-set(BGFX_DIR "${BGFX_DIR}" CACHE PATH "" FORCE)
-set(BX_DIR "${BX_DIR}" CACHE PATH "" FORCE)
-set(BIMG_DIR "${BIMG_DIR}" CACHE PATH "" FORCE)
-
-set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BGFX_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(BGFX_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-set(BGFX_LIBRARY_TYPE STATIC CACHE STRING "" FORCE)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(
-    "${BGFX_CMAKE_DIR}"
-    "${CMAKE_BINARY_DIR}/bgfx"
+    "${DEPS_DIR}/assimp"
+    "${CMAKE_BINARY_DIR}/assimp"
 )
+
+
+# ========================================================= 
+# R3D   
+# ========================================================
+
+clone_dependency(
+    r3d
+    https://github.com/Bigfoot71/r3d.git
+    "${DEPS_DIR}/r3d"
+)
+
+set(R3D_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(
+    "${DEPS_DIR}/r3d"
+    "${CMAKE_BINARY_DIR}/r3d"
+)
+
+
+
+
+# =========================================================
+# Game Sources
+# =========================================================
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
@@ -120,6 +145,12 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 list(FILTER SOURCES EXCLUDE REGEX
     "${DEPS_DIR}/.*"
 )
+
+
+
+# =========================================================
+# Game
+# =========================================================
 
 add_executable(TheNineWorlds
     ${SOURCES}
@@ -134,16 +165,33 @@ target_include_directories(TheNineWorlds PRIVATE
 )
 
 target_link_libraries(TheNineWorlds PRIVATE
-    SDL3::SDL3
+    raylib
     glm
     Jolt
-    bgfx
+    assimp
+    r3d
 )
+
+
+
+# =========================================================
+# Assets
+# =========================================================
+
+add_custom_command(TARGET TheNineWorlds POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:TheNineWorlds>/assets"
+)
+
+# =========================================================
+# Runtime dependencies
+# =========================================================
 
 if(WIN32)
     add_custom_command(TARGET TheNineWorlds POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<TARGET_FILE:SDL3-shared>"
+            "$<TARGET_FILE:raylib>"
             "$<TARGET_FILE_DIR:TheNineWorlds>"
     )
 endif()

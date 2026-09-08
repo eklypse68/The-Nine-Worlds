@@ -1,15 +1,20 @@
 #pragma once
 
-#include <SDL3/SDL.h>
+#include "r3d/r3d_lighting.h"
+
 
 class Game
 {
 public:
-bool init();
-void run();
-void shutdown();
+    bool init();
+    void run();
+    void shutdown();
+    void update();
+    void render();
 
 private:
-SDL_Window* window = nullptr;
-bool running = false;
+    bool running = false;
+    R3D_Light light;
+    R3D_Light light2;
+ 
 };
