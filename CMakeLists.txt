@@ -164,6 +164,10 @@ target_include_directories(TheNineWorlds PRIVATE
     "${CMAKE_SOURCE_DIR}/src"
 )
 
+target_include_directories(TheNineWorlds PRIVATE
+    ${CMAKE_SOURCE_DIR}/worlds
+)
+
 target_link_libraries(TheNineWorlds PRIVATE
     raylib
     glm
