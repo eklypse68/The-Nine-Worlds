@@ -17,7 +17,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Dependencies
 # =========================================================
 
-set(DEPS_DIR "${CMAKE_SOURCE_DIR}/src/deps")
+set(DEPS_DIR "${CMAKE_SOURCE_DIR}/deps")
 
 function(clone_dependency NAME URL PATH)
     if(NOT EXISTS "${PATH}")
@@ -87,6 +87,7 @@ set(DOUBLE_PRECISION OFF CACHE BOOL "" FORCE)
 set(GENERATE_DEBUG_SYMBOLS ON CACHE BOOL "" FORCE)
 set(OVERRIDE_CXX_FLAGS OFF CACHE BOOL "" FORCE)
 set(INTERPROCEDURAL_OPTIMIZATION OFF CACHE BOOL "" FORCE)
+set(USE_STATIC_MSVC_RUNTIME_LIBRARY OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(
     "${JOLT_DIR}/Build"
@@ -112,6 +113,12 @@ add_subdirectory(
     "${DEPS_DIR}/assimp"
     "${CMAKE_BINARY_DIR}/assimp"
 )
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_RC_COMPILER MATCHES "llvm-rc")
+    get_target_property(ASSIMP_SOURCES assimp SOURCES)
+    list(FILTER ASSIMP_SOURCES EXCLUDE REGEX "assimp\\.rc$")
+    set_property(TARGET assimp PROPERTY SOURCES "${ASSIMP_SOURCES}")
+endif()
 
 
 # ========================================================= 
@@ -165,7 +172,11 @@ target_include_directories(TheNineWorlds PRIVATE
 )
 
 target_include_directories(TheNineWorlds PRIVATE
-    ${CMAKE_SOURCE_DIR}/worlds
+    "${CMAKE_SOURCE_DIR}/worlds"
+)
+
+target_include_directories(TheNineWorlds PRIVATE
+    "${DEPS_DIR}/r3d/include"
 )
 
 target_link_libraries(TheNineWorlds PRIVATE
